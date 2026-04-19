@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "DUT Campus Security",
+    "slug": "dut-campus-security",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1a2e"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a1a2e"
+      },
+      "package": "com.dut.campussecurity",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.dut.campussecurity",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "DUT Security needs your location to send help when you trigger an emergency alert.",
+        "NSLocationAlwaysUsageDescription": "DUT Security needs your location to track your safety on campus.",
+        "NSCameraUsageDescription": "DUT Security needs camera access to attach photos to incident reports."
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "DUT Security needs your location to send help in emergencies."
+        }
+      ],
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "65e0a9cd-68bc-45de-8e06-913838b9a355"
+      }
+    },
+    "owner": "aphiwamambo"
+  }
+}

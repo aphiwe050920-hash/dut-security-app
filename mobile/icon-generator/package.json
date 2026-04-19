@@ -1,0 +1,8 @@
+{
+  "name": "icon-generator",
+  "version": "1.0.0",
+  "main": "generate.js",
+  "dependencies": {
+    "sharp": "^0.34.5"
+  }
+}
