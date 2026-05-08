@@ -13,6 +13,7 @@ const authRoutes = require('./routes/authRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const incidentRoutes = require('./routes/incidentRoutes');
 const userRoutes = require('./routes/userRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 
 // Load env vars
 dotenv.config();
@@ -47,6 +48,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Socket stats endpoint
 app.get('/api/stats', protect, async (req, res) => {

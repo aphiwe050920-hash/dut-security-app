@@ -51,6 +51,49 @@ const initSocket = (socketIO) => {
       }
       console.log(`❌ Disconnected: ${socket.id}`);
     });
+
+    // Real-time chat
+    socket.on('send_message', async (data) => {
+      const { conversationId, message, sender, receiver, roomType } = data;
+
+      // Send to specific user
+      if (receiver?._id) {
+        io.to(`user_${receiver._id}`).emit('receive_message', data);
+      }
+
+      // Also send to security room if it's a user→security message
+      if (roomType === 'user_security') {
+        io.to('security').emit('receive_message', data);
+      }
+
+      // Send to admin room if security→admin
+      if (roomType === 'security_admin') {
+        io.to('admin').emit('receive_message', data);
+        io.to('security').emit('receive_message', data);
+      }
+
+      console.log(`💬 Message: ${sender?.name} → ${conversationId}`);
+    });
+
+    // Typing indicators
+    socket.on('typing', (data) => {
+      if (data.receiverId) {
+        io.to(`user_${data.receiverId}`).emit('user_typing', data);
+      }
+    });
+
+    socket.on('stop_typing', (data) => {
+      if (data.receiverId) {
+        io.to(`user_${data.receiverId}`).emit('user_stop_typing', data);
+      }
+    });
+
+    // PANIC ALARM — trigger loud alarm on security devices
+    socket.on('panic_alarm', (data) => {
+      io.to('security').emit('play_alarm', data);
+      io.to('admin').emit('play_alarm', data);
+      console.log(`🚨 PANIC ALARM triggered by: ${data.userName}`);
+    });
   });
 };
 

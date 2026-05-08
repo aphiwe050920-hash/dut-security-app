@@ -20,12 +20,21 @@ const createIncident = async (req, res) => {
       category: category || 'other',
       location,
       images: images || [],
+      isAnonymous: isAnonymous || false,
       aiPriorityScore: aiScore,
       priority: aiScore >= 80 ? 'critical' : aiScore >= 60 ? 'high' : aiScore >= 40 ? 'medium' : 'low',
       linkedAlert: linkedAlert || null,
     });
 
     await incident.populate('reportedBy', 'name email role');
+    // Hide reporter identity if anonymous
+    if (incident.isAnonymous) {
+      incident.reportedBy = {
+        name: 'Anonymous',
+        email: 'anonymous@dut.ac.za',
+        role: 'student',
+      };
+    }
     res.status(201).json({ success: true, incident });
   } catch (error) {
     res.status(500).json({ message: error.message });

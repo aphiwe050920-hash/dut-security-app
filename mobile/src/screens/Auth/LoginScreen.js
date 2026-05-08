@@ -6,9 +6,11 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../utils/constants';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -80,6 +82,12 @@ export default function LoginScreen({ navigation }) {
               <Text style={styles.loginBtnText}>LOGIN</Text>
             )}
           </TouchableOpacity>
+          
+          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+            <Text style={[styles.forgotText, { color: theme.primary }]}>
+              Forgot Password?
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity onPress={() => navigation.navigate('Register')}>
             <Text style={styles.registerLink}>
@@ -131,4 +139,9 @@ const styles = StyleSheet.create({
   loginBtnText: { color: COLORS.white, fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
   registerLink: { textAlign: 'center', marginTop: 20, color: COLORS.grey, fontSize: 14 },
   registerLinkBold: { color: COLORS.primary, fontWeight: 'bold' },
+  forgotText: {
+  textAlign: 'right', fontSize: 13,
+  fontWeight: '600', marginTop: 8, marginBottom: 4,
+  },
+  
 });

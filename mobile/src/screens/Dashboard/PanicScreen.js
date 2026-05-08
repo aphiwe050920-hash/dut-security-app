@@ -7,8 +7,16 @@ import * as Location from 'expo-location';
 import { triggerAlertAPI } from '../../services/api';
 import { COLORS, ALERT_TYPES } from '../../utils/constants';
 import { analyseTextThreats } from '../../utils/aiAnalytics';
+import { getSocket } from '../../services/socketService';
+import { useAuth } from '../../context/AuthContext';
+import {
+  triggerAlertAPI,
+  getSecurityUsersAPI,
+  sendMessageAPI,
+} from '../../services/api';
 
 export default function PanicScreen({ navigation }) {
+  const { user } = useAuth();
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -59,7 +67,7 @@ export default function PanicScreen({ navigation }) {
   const sendAlert = async () => {
     try {
       setLoading(true);
-      await triggerAlertAPI({
+      const res = await triggerAlertAPI({
         type: selectedType,
         message: message || `${selectedType.toUpperCase()} emergency triggered on campus`,
         location: {
@@ -68,13 +76,65 @@ export default function PanicScreen({ navigation }) {
         },
       });
 
+      const socket = getSocket();
+      socket?.emit('panic_alarm', {
+        userName: user?.name,
+        userId: user?._id,
+        type: selectedType,
+        message: message || 'Emergency help needed',
+        location: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+        },
+        alertId: res.data.alert?._id,
+      });
+
+      // Auto-send a chat message to all security officers
+      try {
+        const secRes = await getSecurityUsersAPI();
+        const securityUsers = secRes.data.users.filter(
+          (u) => u.role === 'security'
+        );
+
+        // Message the first available security officer
+        if (securityUsers.length > 0) {
+          const officer = securityUsers[0];
+          const conversationId = [user._id, officer._id]
+            .sort().join('_');
+
+          await sendMessageAPI({
+            receiverId: officer._id,
+            message: `🆘 PANIC ALERT: ${message || selectedType.toUpperCase() + ' emergency. I need help immediately!'}`,
+            messageType: 'alert',
+            roomType: 'user_security',
+            linkedAlert: res.data.alert?._id,
+          });
+
+          socket?.emit('send_message', {
+            conversationId,
+            sender: { _id: user._id, name: user.name, role: user.role },
+            receiver: officer,
+            message: `🆘 PANIC ALERT: ${message || selectedType.toUpperCase() + ' emergency. I need help immediately!'}`,
+            messageType: 'alert',
+          });
+        }
+      } catch (chatErr) {
+        console.log('Auto chat error:', chatErr.message);
+      }
+
       Alert.alert(
         '✅ Alert Sent!',
-        'Campus security has been notified. Help is on the way. Stay safe.',
-        [{ text: 'OK', onPress: () => navigation.navigate('Home') }]
+        'Campus security has been notified and a chat has been opened. Help is on the way.',
+        [{
+          text: 'OK',
+          onPress: () => navigation.navigate('Home'),
+        }]
       );
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to send alert. Try again.');
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to send alert.'
+      );
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,16 @@
-node_modules/
-.env
-.expo/
-dist/
+# Backend
+backend/node_modules/
+backend/.env
+backend/src/uploads/
+
+# Mobile
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/android/
+mobile/ios/
+mobile/icon-generator/node_modules/
+
+# General
+.DS_Store
+*.log

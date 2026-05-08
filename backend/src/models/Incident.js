@@ -65,6 +65,10 @@ const IncidentSchema = new mongoose.Schema(
       ref: 'Alert',
       default: null,
     },
+    isAnonymous: {
+  type: Boolean,
+  default: false,
+    },
   },
   { timestamps: true }
 );

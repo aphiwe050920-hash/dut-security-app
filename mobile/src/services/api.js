@@ -24,6 +24,8 @@ api.interceptors.request.use(
 export const registerAPI = (data) => api.post('/auth/register', data);
 export const loginAPI = (data) => api.post('/auth/login', data);
 export const getMeAPI = () => api.get('/auth/me');
+export const forgotPasswordAPI = (data) => api.post('/auth/forgot-password', data);
+export const resetPasswordAPI = (data) => api.post('/auth/reset-password', data);
 
 // Alerts
 export const triggerAlertAPI = (data) => api.post('/alerts/trigger', data);
@@ -42,5 +44,12 @@ export const getUsersAPI = () => api.get('/users');
 export const updateProfileAPI = (data) => api.put('/users/profile', data);
 export const updateLocationAPI = (data) => api.put('/users/location', data);
 export const deleteUserAPI = (id) => api.delete(`/users/${id}`);
+
+// Messages
+export const sendMessageAPI = (data) => api.post('/messages/send', data);
+export const getMessagesAPI = (conversationId) => api.get(`/messages/${conversationId}`);
+export const getConversationsAPI = () => api.get('/messages/conversations');
+export const getSecurityUsersAPI = () => api.get('/messages/security-users');
+export const markAsReadAPI = (conversationId) => api.put(`/messages/${conversationId}/read`);
 
 export default api;
