@@ -4,7 +4,6 @@ import {
   Alert, ActivityIndicator, TextInput, ScrollView,
 } from 'react-native';
 import * as Location from 'expo-location';
-import { triggerAlertAPI } from '../../services/api';
 import { COLORS, ALERT_TYPES } from '../../utils/constants';
 import { analyseTextThreats } from '../../utils/aiAnalytics';
 import { getSocket } from '../../services/socketService';

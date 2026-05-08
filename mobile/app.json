@@ -50,7 +50,8 @@
           "locationAlwaysAndWhenInUsePermission": "DUT Security needs your location to send help in emergencies."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-audio"
     ],
     "extra": {
       "eas": {

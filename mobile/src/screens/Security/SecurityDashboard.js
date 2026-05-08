@@ -39,10 +39,15 @@ export default function SecurityDashboard({ navigation }) {
     if (!alert.triggeredBy?._id) return;
     const conversationId = [alert.triggeredBy._id, user._id]
       .sort().join('_');
-    navigation.navigate('ChatRoom', {
-      conversationId,
-      otherUser: alert.triggeredBy,
-      roomType: 'user_security',
+
+    // Navigate to ChatTab first, then ChatRoom inside it
+    navigation.navigate('ChatTab', {
+      screen: 'ChatRoom',
+      params: {
+        conversationId,
+        otherUser: alert.triggeredBy,
+        roomType: 'user_security',
+      },
     });
   };
 

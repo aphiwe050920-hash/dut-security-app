@@ -81,7 +81,9 @@ export default function AlertsScreen() {
       {/* Alert List */}
       <FlatList
         data={filteredAlerts}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item, index) =>
+          item._id?.toString() || index.toString()
+        }
         renderItem={renderAlert}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
         contentContainerStyle={{ padding: 16, paddingBottom: 80 }}

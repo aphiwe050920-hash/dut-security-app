@@ -14,21 +14,12 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_APP_ENV": "preview"
       }
     },
     "production": {
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_APP_ENV": "production"
       }
     }
-  },
-  "submit": {
-    "production": {}
   }
 }

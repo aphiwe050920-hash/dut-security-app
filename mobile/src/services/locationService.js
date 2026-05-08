@@ -3,7 +3,6 @@ import { updateLocationAPI } from './api';
 import { emitLocationUpdate } from './socketService';
 
 let locationSubscription = null;
-let watchInterval = null;
 
 export const requestLocationPermission = async () => {
   const { status } = await Location.requestForegroundPermissionsAsync();
@@ -33,28 +32,46 @@ export const startLocationTracking = async (userId, role, onUpdate) => {
     const granted = await requestLocationPermission();
     if (!granted) return false;
 
+    // ✅ Emit location IMMEDIATELY on start
+    const currentLoc = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+
+    const initialCoords = {
+      latitude: currentLoc.coords.latitude,
+      longitude: currentLoc.coords.longitude,
+    };
+
+    // Emit immediately so security sees you right away
+    emitLocationUpdate(userId, initialCoords, role);
+
+    // Save to DB immediately
+    try {
+      await updateLocationAPI(initialCoords);
+    } catch {}
+
+    if (onUpdate) onUpdate(initialCoords);
+
+    // Then continue watching
     locationSubscription = await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.Balanced,
-        timeInterval: 15000,   // every 15 seconds
-        distanceInterval: 20,  // or every 20 meters
+        timeInterval: 10000,   // every 10 seconds
+        distanceInterval: 15,  // or every 15 meters
       },
       async (loc) => {
         const coords = {
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
         };
-        // Emit via socket for real-time tracking
         emitLocationUpdate(userId, coords, role);
-        // Update in database
         try {
           await updateLocationAPI(coords);
-        } catch (err) {
-          console.error('Location update error:', err.message);
-        }
+        } catch {}
         if (onUpdate) onUpdate(coords);
       }
     );
+
     return true;
   } catch (error) {
     console.error('Tracking error:', error);

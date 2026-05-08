@@ -44,21 +44,17 @@ export const AlertProvider = ({ children }) => {
   };
 
   const handleNewAlert = useCallback(async (alert) => {
-    // Add to top of list
     setAlerts((prev) => {
-      const exists = prev.find((a) => a._id === alert._id);
+      // Strictly prevent duplicates by _id
+      const exists = prev.some((a) => a._id === alert._id);
       if (exists) return prev;
       return [alert, ...prev];
     });
 
-    // Set active alert for banner
     setActiveAlert(alert);
     setNewAlertBanner(alert);
-
-    // Send push notification
     await sendEmergencyNotification(alert);
 
-    // Auto-dismiss banner after 6 seconds
     if (bannerTimer.current) clearTimeout(bannerTimer.current);
     bannerTimer.current = setTimeout(() => {
       setNewAlertBanner(null);
@@ -69,7 +65,12 @@ export const AlertProvider = ({ children }) => {
     try {
       setLoading(true);
       const res = await getAlertsAPI({ limit: 50 });
-      setAlerts(res.data.alerts);
+      // Deduplicate by _id just in case
+      const unique = res.data.alerts.filter(
+        (alert, index, self) =>
+          index === self.findIndex((a) => a._id === alert._id)
+      );
+      setAlerts(unique);
     } catch (error) {
       console.error('Error fetching alerts:', error.message);
     } finally {

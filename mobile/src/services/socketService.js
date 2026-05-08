@@ -97,3 +97,19 @@ export const emitLocationUpdate = (userId, coords, role) => {
 };
 
 export const isSocketConnected = () => socket?.connected || false;
+
+export const requestOnlineUsers = () => {
+  if (socket?.connected) {
+    socket.emit('get_online_users');
+  }
+};
+
+export const onOnlineUsersList = (callback) => {
+  if (!socket) return;
+  socket.on('online_users_list', callback);
+};
+
+export const onAllLocations = (callback) => {
+  if (!socket) return;
+  socket.on('all_locations', callback);
+};

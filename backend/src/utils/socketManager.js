@@ -1,5 +1,7 @@
 let io;
 const connectedUsers = new Map();
+// Store last known location per user
+const userLocations = new Map();
 
 const initSocket = (socketIO) => {
   io = socketIO;
@@ -7,72 +9,72 @@ const initSocket = (socketIO) => {
   io.on('connection', (socket) => {
     console.log(`🔌 Connected: ${socket.id}`);
 
-    // Join role room
     socket.on('join_room', (role) => {
       socket.join(role);
       console.log(`👤 ${socket.id} → room: ${role}`);
     });
 
-    // Join user-specific room
     socket.on('join_user', (userId) => {
       socket.join(`user_${userId}`);
-      connectedUsers.set(userId, socket.id);
-      // Notify security of new user online
-      io.to('security').emit('user_connected', { userId, socketId: socket.id });
+      connectedUsers.set(userId, {
+        socketId: socket.id,
+        connectedAt: new Date(),
+      });
+
+      // Notify security/admin of new user online
+      io.to('security').emit('user_connected', { userId });
+      io.to('admin').emit('user_connected', { userId });
+
+      console.log(`👤 User ${userId} online. Total: ${connectedUsers.size}`);
     });
 
-    // Live location updates from users
+    // Security requests list of ALL currently online users
+    socket.on('get_online_users', () => {
+      const onlineList = Array.from(connectedUsers.keys());
+      socket.emit('online_users_list', { userIds: onlineList });
+
+      // Also send last known locations
+      const locations = {};
+      userLocations.forEach((loc, userId) => {
+        locations[userId] = loc;
+      });
+      socket.emit('all_locations', { locations });
+    });
+
+    // Live location updates
     socket.on('location_update', (data) => {
       const { userId, coords, role } = data;
-      // Forward to security and admin
-      io.to('security').emit('user_location_update', { userId, coords, role });
-      io.to('admin').emit('user_location_update', { userId, coords, role });
-    });
 
-    // Security officer status
-    socket.on('security_online', (data) => {
-      io.emit('security_status', { ...data, online: true });
-    });
+      // Store latest location
+      userLocations.set(userId, {
+        ...coords,
+        role,
+        updatedAt: new Date().toISOString(),
+      });
 
-    // Broadcast message from security
-    socket.on('broadcast_message', (data) => {
-      io.emit('campus_announcement', data);
-      console.log(`📢 Broadcast: ${data.message}`);
-    });
-
-    socket.on('disconnect', () => {
-      // Remove from connected users map
-      for (const [userId, socketId] of connectedUsers.entries()) {
-        if (socketId === socket.id) {
-          connectedUsers.delete(userId);
-          io.to('security').emit('user_disconnected', { userId });
-          break;
-        }
-      }
-      console.log(`❌ Disconnected: ${socket.id}`);
+      // Broadcast to security and admin
+      io.to('security').emit('user_location_update', {
+        userId, coords, role,
+      });
+      io.to('admin').emit('user_location_update', {
+        userId, coords, role,
+      });
     });
 
     // Real-time chat
     socket.on('send_message', async (data) => {
-      const { conversationId, message, sender, receiver, roomType } = data;
+      const { conversationId, receiver, roomType } = data;
 
-      // Send to specific user
       if (receiver?._id) {
         io.to(`user_${receiver._id}`).emit('receive_message', data);
       }
-
-      // Also send to security room if it's a user→security message
       if (roomType === 'user_security') {
         io.to('security').emit('receive_message', data);
       }
-
-      // Send to admin room if security→admin
       if (roomType === 'security_admin') {
         io.to('admin').emit('receive_message', data);
         io.to('security').emit('receive_message', data);
       }
-
-      console.log(`💬 Message: ${sender?.name} → ${conversationId}`);
     });
 
     // Typing indicators
@@ -81,26 +83,41 @@ const initSocket = (socketIO) => {
         io.to(`user_${data.receiverId}`).emit('user_typing', data);
       }
     });
-
     socket.on('stop_typing', (data) => {
       if (data.receiverId) {
         io.to(`user_${data.receiverId}`).emit('user_stop_typing', data);
       }
     });
 
-    // PANIC ALARM — trigger loud alarm on security devices
+    // Broadcast message from security
+    socket.on('broadcast_message', (data) => {
+      io.emit('campus_announcement', data);
+    });
+
+    // Panic alarm
     socket.on('panic_alarm', (data) => {
       io.to('security').emit('play_alarm', data);
       io.to('admin').emit('play_alarm', data);
-      console.log(`🚨 PANIC ALARM triggered by: ${data.userName}`);
+      console.log(`🚨 PANIC by: ${data.userName}`);
+    });
+
+    socket.on('disconnect', () => {
+      for (const [userId, info] of connectedUsers.entries()) {
+        if (info.socketId === socket.id) {
+          connectedUsers.delete(userId);
+          io.to('security').emit('user_disconnected', { userId });
+          io.to('admin').emit('user_disconnected', { userId });
+          console.log(`❌ User ${userId} offline`);
+          break;
+        }
+      }
+      console.log(`❌ Socket ${socket.id} disconnected`);
     });
   });
 };
 
 const broadcastAlert = (alert) => {
   if (!io) return;
-
-  // Broadcast to ALL connected clients
   io.emit('new_alert', {
     _id: alert._id,
     type: alert.type,
@@ -112,10 +129,7 @@ const broadcastAlert = (alert) => {
     status: alert.status,
     createdAt: alert.createdAt,
   });
-
-  // Extra emit specifically to security room
   io.to('security').emit('emergency_alert', alert);
-
   console.log(`📡 Alert broadcast: [${alert.priority?.toUpperCase()}] ${alert.type}`);
 };
 

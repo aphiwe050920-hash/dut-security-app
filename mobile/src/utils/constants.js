@@ -1,5 +1,5 @@
-export const API_URL = 'https://railway.com/project/5a624eb5-1eaa-45f1-9d0c-af5e2ca6f884/api';  // Replace IP with your PC's local IP
-export const SOCKET_URL = 'https://railway.com/project/5a624eb5-1eaa-45f1-9d0c-af5e2ca6f884';   // Same IP
+export const API_URL = 'https://dut-security-app-production.up.railway.app/api';
+export const SOCKET_URL = 'https://dut-security-app-production.up.railway.app';   // Same IP
 
 export const COLORS = {
   primary: '#CC0000',       // DUT Red
